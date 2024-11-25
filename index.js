@@ -8,14 +8,15 @@ const app = express();
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
-  if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' })
-  } else if (error.name === 'ValidationError') {
-    return response.status(400).json({ error: error.message })
+  if(error.name === "CastError"){
+    return response.status(400).send({error: "malformatted id"})
+  }
+  else if(error.name === "ValidationError"){
+    return response.status(400).send({error: error.message})
   }
 
   next(error)
-}
+} 
 
 app.use(cors());
 app.use(express.static('dist'))
@@ -58,12 +59,13 @@ app.get('/api/notes/:id', (request, response, next) => {
 });
 
 app.delete('/api/notes/:id', (request, response, next) => {
-    Note.findByIdAndDelete(request.params.id)
-    .then(result => {
-      response.status(204).end()
-    })
-    .catch(error => next(error))
-});
+  Note.findByIdAndDelete(request.params.id)
+  .then(result => {
+    console.log(result)
+    response.status(204).end()
+  })
+  .catch(error => next(error))
+})
 
 app.post('/api/notes', (request, response, next) => {
    const body = request.body;
@@ -86,18 +88,24 @@ app.post('/api/notes', (request, response, next) => {
    .catch(error => next(error))
 })
 
-app.put('/api/notes/:id', (require, response, next) => {
-  const {content, important} = require.body;
+app.put('/api/notes/:id', (request, response, next) => {
+  const body = request.body;
 
-  Note.findByIdAndUpdate(require.params.id, {content, important}, {new:true, runValidators, context:'query'})
-  .then(updatedNote => {
-    response.json(updatedNote)
+  const note = {
+    content: body.content,
+    important: body.important
+  }
+
+  Note.findByIdAndUpdate(request.params.id, note, {new:true, runValidators: true, context:"query"})
+  .then(noteUpdate => {
+    console.log(noteUpdate)
+    response.json(noteUpdate)
   })
   .catch(error => next(error))
 })
 
-app.use(errorHandler)
 app.use(unknownEndpoint)
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 
